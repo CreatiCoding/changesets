@@ -1,32 +1,153 @@
-# 자주 묻는 질문 (Common Questions)
+# 커맨드 라인 옵션
 
-Changesets의 동작 방식을 간략하게 이해하는 데 도움이 되는 질문과 답변입니다. 세부적인 workflow 설명은 포함하지 않습니다.
+Changesets의 주요 인터페이스는 커맨드 라인입니다. 주요 명령어는 다음과 같습니다.
+권장 workflow 및 설정 방법은 [Changesets 사용 시작하기](/intro-to-using-changesets) 문서를 참고하세요.
 
-## Changesets는 자동으로 생성됩니다
+* init
+* add \[--empty]\[--open]
+* version \[--ignore, --snapshot]
+* publish \[--otp=code, --tag]
+* status \[--since=master --verbose --output=JSON\_FILE.json]
+* pre \[exit|enter {tag}]
+* tag
 
-Changesets는 `yarn changeset` 또는 `npx changeset` 명령으로 생성됩니다. changeset release flow를 따르기만 하면 문제없이 사용할 수 있습니다.
+가장 중요한 명령어:
 
-## 각 Changeset은 독립된 파일입니다
+* `add`: 기여자가 변경 사항 정보를 추가
+* `version`: `add`로 생성한 changeset을 기반으로 버전 및 changelog 업데이트
+* `publish`: npm에 배포
 
-파일 충돌을 방지하기 위해 기본적으로 사람이 읽을 수 있는 랜덤 이름이 붙습니다. 원한다면 파일 이름을 변경해도 아무런 문제가 발생하지 않습니다.
+## `init`
 
-## Changesets는 자동으로 삭제됩니다
+```bash
+changeset init
+```
 
-`changeset version` 또는 동일한 명령어를 실행하면 모든 changeset 폴더가 삭제됩니다. changeset은 한 번만 사용되도록 설계되어 있으며, 따라서 다른 데이터를 이 폴더에 저장하는 것은 권장하지 않습니다.
+`.changeset` 폴더를 생성하고 readme 및 config 파일을 생성합니다. 최초 설정 시 한 번만 실행합니다.
 
-## Changesets는 YAML front matter와 markdown 본문으로 구성된 파일입니다
+## `add`
 
-파일은 두 부분으로 나뉩니다.
+```bash
+changeset add
+```
 
-* **markdown 본문**: changelog에 추가될 변경 요약
-* **YAML front matter**: 버전 명령어에서 어떤 패키지를 어떤 유형으로 버전 업데이트할지 정의
+또는
 
-필요에 따라 자유롭게 수정할 수 있습니다.
+```bash
+changeset
+```
 
-## 변경 요약(summary)이나 버전 종류(bump type)를 수정해도 되나요?
+Changesets의 주요 인터페이스입니다. 패키지 선택 → bump type 선택 → 변경 요약 입력 → changeset 파일 생성 과정을 거칩니다.
 
-네, 안전하게 수정할 수 있습니다. 심지어 명령어 없이 직접 changeset 파일을 작성해도 괜찮습니다.
+예시:
 
-## changeset 파일을 수동으로 삭제해도 되나요?
+```mdx
+---
+"@changesets/cli": major
+---
 
-가능하지만 **주의가 필요합니다**. changeset을 삭제하면 해당 패키지의 릴리스 의도가 사라지므로 신중하게 판단해야 합니다.
+A description of the major changes.
+```
+
+* `--empty`: 업데이트할 패키지가 없지만 CI가 changeset을 요구하는 경우 사용
+
+```bash
+changeset --empty
+```
+
+```mdx
+---
+---
+```
+
+* `--open`: 생성된 changeset을 외부 편집기로 바로 엽니다.
+
+## `version`
+
+```bash
+changeset version
+```
+
+Changesets로 릴리스할 때 실행합니다. 버전 및 의존성을 업데이트하고 changelog를 작성합니다.
+
+> **주의:** publish 전에 반드시 base 브랜치로 merge 할 것을 권장합니다.
+
+옵션:
+
+```bash
+changeset version --ignore PACKAGE_NAME
+```
+
+일부 패키지를 제외하고 부분 배포를 허용합니다. 단, 다음의 경우 실패합니다:
+
+1. 제외 패키지가 포함된 changeset에 비제외 패키지가 있을 때
+2. 제외 패키지가 업데이트된 의존성을 필요로 할 때
+
+```bash
+changeset version --snapshot
+```
+
+스냅샷 릴리스를 생성합니다. (상세: [스냅샷 릴리스](/snapshot-releases) 문서)
+
+## `publish`
+
+```bash
+changeset publish [--otp={token}]
+```
+
+패키지를 npm에 배포하고 git 태그를 생성합니다. `pnpm` 사용 시 자동으로 `pnpm publish`를 사용합니다.
+
+옵션:
+
+* `--otp={token}`: npm 2차 인증 코드
+* `--tag TAGNAME`: 테스트 용도의 배포 (예: `snapshot releases`와 함께 사용)
+
+### Git 태그
+
+배포 시 생성된 git 태그를 push 하려면 다음 명령어를 실행하세요.
+
+```bash
+git push --follow-tags
+```
+
+## `status`
+
+```bash
+changeset status [--verbose] [--output={filePath}] [--since={gitTag}]
+```
+
+현재 존재하는 changeset 정보를 확인합니다.
+
+옵션:
+
+* `--verbose`: 새 버전 및 관련 changeset 요약 링크 출력
+* `--output`: 상태 결과를 JSON으로 파일로 출력 (CI 등에서 활용 가능)
+* `--since`: 특정 브랜치나 태그 이후의 changeset만 표시
+
+> **주의:** `version` 또는 `publish` 실행 중에는 실패합니다. 반드시 실행 직전에 사용해야 합니다.
+
+## `pre`
+
+```bash
+changeset pre [exit|enter {tag}]
+```
+
+프리릴리스 모드를 시작(`enter`) 또는 종료(`exit`)합니다.
+`enter` 후에는 `version` → `publish`로 정상 릴리스 플로우를 따릅니다.
+자세한 내용은 [프리릴리스 문서](/prereleases) 참고.
+
+> **주의:** pre-release는 매우 복잡하며, Changesets의 안전장치가 비활성화됩니다. 반드시 [모노레포 배포 문제](/problems-publishing-in-monorepos)와 함께 충분히 학습 후 사용하세요. 더 간편한 테스트용 릴리스는 [스냅샷 릴리스](/snapshot-releases)를 추천합니다.
+
+## `tag`
+
+```bash
+changeset tag
+```
+
+현재 버전의 모든 패키지에 git 태그를 생성합니다.
+실제 npm 배포는 하지 않습니다. (`changeset publish` 사용 시 별도 실행 불필요)
+
+* monorepo: `pkg-name@version-number`
+* single-package repo: `v1.0.0`
+
+**반드시 `changeset version` 실행 후 사용해야 합니다.**
