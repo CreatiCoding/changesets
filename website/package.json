@@ -1,0 +1,22 @@
+{
+  "name": "docs",
+  "version": "0.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "~15.1.0",
+    "nextra": "^3.2.5",
+    "nextra-theme-docs": "^3.2.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@next/eslint-plugin-next": "~15.1.0",
+    "@types/node": "^22.14.1",
+    "@types/react": "19.0.1"
+  }
+}
